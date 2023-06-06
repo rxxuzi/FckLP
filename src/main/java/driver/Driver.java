@@ -52,6 +52,7 @@ public class Driver {
 
         //ソース元のURLを取得
         url = "https://betabooru.donmai.us/posts?tags=" + Tag.translate(tag) + "&z=1";
+        url = "https://w1.linguaporta.jp/user/seibido/index.php";
 
         //タグの表示
         WebDriverManager.chromedriver().setup();

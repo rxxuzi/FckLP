@@ -23,7 +23,7 @@ public class DriverRun {
     private static boolean blockNSFW  = false;
     private static boolean isSuccess = true;
     public static String tag = "999_(hansode)";
-    public static String url = "https://betabooru.donmai.us/posts?tags=wsfw&z=1";
+    public static String url = "https://w1.linguaporta.jp/user/seibido/index.php";
     private static int totalImage = 0;
 
 
@@ -31,188 +31,66 @@ public class DriverRun {
 
         System.out.println(Tag.translate(tag));
 
-        url = "https://betabooru.donmai.us/posts?tags=" + Tag.translate(tag) + "&z=1";
         Log.clean();
-
 
         WebDriverManager.chromedriver().setup();
         System.setProperty("webdriver.chrome.driver","./opt/chromedriver_win32/chromedriver.exe");
         WebDriver driver = new ChromeDriver();
+
+        driver.get("https://w1.linguaporta.jp/user/seibido/index.php");
         //ウィンドウのサイズを最小化する
 //        driver.manage().window().setSize(new Dimension(0, 0));
 
+        WebElement textBox = driver.findElement(By.name("id"));
+        textBox.sendKeys("4534fukuda");
 
+        WebElement passwordBox = driver.findElement(By.name("password"));
+        passwordBox.sendKeys("vFe8drF9");
+        wait(driver,700);
+        WebElement loginButton = driver.findElement(By.id("btn-login"));
+        loginButton.click();
+
+
+
+        WebElement studyForm = driver.findElement(By.name("Study"));
+        studyForm.click();
+
+        WebElement unitList = driver.findElement(By.className("btn-reference-select"));
+        unitList.click();
+
+        WebElement list = driver.findElement(By.id("cn1106cn20cn30"));
+        list.click();
+
+        WebElement study = driver.findElement(By.className("btn-study"));
+        study.click();
 
         driver.get(url);
+
 
         System.out.println(driver.getTitle());
 
         wait(driver,700);
 
-        //カウント用変数
-        int counter = 0;
-        //重複しないように設定
-        String nowUrl;
-
-        //ページの切り替え
-        for(int i = 0 ; i < maxPage ; i ++ ){
-            if(imageCounter >= maxImage){
-                break;
-            }
-
-            nowUrl = driver.getCurrentUrl();
-
-            //imgタグのついているものをListにまとめる
-            List<WebElement> imageLinks = driver.findElements(By.className("post-preview-link"));
-            System.out.println("Link Size" + imageLinks.size());
-
-            //それぞれのimageUrlに対してスクレイピング
-            for (WebElement link : imageLinks) {
-                if(imageCounter >= maxImage){
-                    break;
-                }
-                //プレビュー画像に付いていたリンクを抜き取る
-                String linkUrl = link.getAttribute("href");
-
-                if (linkUrl != null && linkUrl.startsWith("http")) {
-                    //リンク先へ移動
-                    driver.navigate().to(linkUrl);
-                    WebElement preview = driver.findElement(By.id("post-info-rating"));
-                    String rating = preview.getText().split(":")[1].trim();
-
-                    System.out.print(rating+", ");
-
-                    WebElement image = driver.findElement(By.id("image"));
-                    //src属性からurlを取得
-                    String imageUrl = image.getAttribute("src");
-
-                    System.out.println(imageUrl);
-                    String fileName;
-
-                    boolean isVideo = false;
-                    //set file name
-                    if(imageUrl.endsWith("gif")) {
-                        fileName = totalImage + Tag.translate(tag) + ".gif";
-                    }else if(imageUrl.endsWith("webm")){
-                        fileName = totalImage + Tag.translate(tag) + ".webm";
-                        isVideo = true;
-                    }else{
-                        fileName = totalImage + Tag.translate(tag) + ".png";
-                    }
-
-                    if(rating.equals("Explicit") && blockNSFW){
-                        System.out.println("Blocked");
-                        Log.write(fileName + " ("  + rating  +") : " + Log.getTime() + " : Blocked");
-                    }else{
-                        //ログに保存
-                        Log.write(fileName + " ("  + rating  +") : " + Log.getTime() + " : " + imageUrl);
-                        //もし保存する内容がgifだったらcontinue
-
-                        if(isVideo){
-                            saveVideo(imageUrl,fileName);
-                        }else{
-                            saveImage(imageUrl, fileName);
-                        }
-                        //保存
-                        totalImage ++;
-                    }
-
-                    //前のページに戻る
-                    driver.navigate().back();
-                    wait(driver,50);
-
-                }
-            }
-
-            wait(driver,750);
-
-            try {
-                WebElement nextPageBtn = driver.findElement(By.className("paginator-next"));
-                nextPageBtn.click();
-            }catch (Exception e){
-                System.out.println("No Next Page");
-                break;
-            }
-
-
-            if(nowUrl.equals(driver.getCurrentUrl())){
-                System.out.println("Same Page");
-                break;
-            }
+        System.gc();
+        boolean Ans = true;
+        int page = 0;
+        for(int i = 0 ; i < 10 ; i++){
+            page++;
         }
+        WebElement txtBox = driver.findElement(By.id("tabindex1"));
+        WebElement ansButton = driver.findElement(By.className("btn-answer-submit"));
+        wait(driver,10);
+        WebElement que = driver.findElement(By.id("qu02"));
+        System.out.println("Question : " + que.getText());
+        txtBox.sendKeys("text");
+        page ++;
+        wait(driver,1200);
+        ansButton.click();
+
+        wait(driver,1200);
+        System.out.println(driver.getTitle() + " count : " + page);
 
 
-        wait(driver, 700);
-        //終了
-        driver.quit();
-
-        isSuccess = maxImage == imageCounter;
-
-        System.out.println("MaX Picture -> " + maxImage);
-        System.out.println("GeT Picture -> " + imageCounter);
-
-    }
-
-    /**
-     * 画像を保存するメソッド
-     * 保存先のディレクトリ指定はこのclassのstatic変数Pathで行う
-     * @param imgURL スクレイプするURL
-     * @param fileName 保存するファイル名
-     */
-    private static void saveImage(String imgURL , String fileName){
-        try{
-            URL url = new URL(imgURL);
-            InputStream inputStream = url.openStream();
-            BufferedInputStream in = new BufferedInputStream(inputStream);
-            FileOutputStream fos = new FileOutputStream(Path + fileName);
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                fos.write(dataBuffer, 0, bytesRead);
-            }
-            Thread.sleep(10);
-
-            in.close();
-            fos.close();
-        }catch (IOException e){
-            Log.error(e.getMessage());
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            Log.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
-        imageCounter ++;
-    }
-
-    /**
-     * 画像を保存するメソッド
-     * 保存先のディレクトリ指定はこのclassのstatic変数Pathで行う
-     * @param imgURL スクレイプするURL
-     * @param fileName 保存するファイル名
-     */
-    private static void saveVideo(String imgURL , String fileName){
-        try{
-            System.out.println("Get Video");
-            URL url = new URL(imgURL);
-            InputStream inputStream = url.openStream();
-//            OutputStream outputStream = new FileOutputStream(Path + fileName);
-            FileOutputStream fileOutputStream = new FileOutputStream(Path + fileName);
-            byte[] buffer = new byte[1_048_576];
-            int bytesRead ;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                fileOutputStream.write(buffer,0,bytesRead);
-//                outputStream.write(buffer, 0, bytesRead);
-            }
-
-            inputStream.close();
-//            outputStream.close();
-            fileOutputStream.close();
-        }catch (IOException e){
-
-            Log.error(e.getMessage());
-            e.printStackTrace();
-        }
-        imageCounter ++;
     }
 
     /**
