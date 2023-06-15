@@ -13,7 +13,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class DriverRun {
-    private static boolean isSuccess = true;
+    private static final boolean isSuccess = true;
     public static String tag = "999_(hansode)";
     public static String url = "https://w1.linguaporta.jp/user/seibido/index.php";
     private static int totalImage = 0;
@@ -51,19 +51,23 @@ public class DriverRun {
         WebElement unitList = driver.findElement(By.className("btn-reference-select"));
         unitList.click();
 
-        WebElement list = driver.findElement(By.id("cn1106cn20cn30"));
+        WebElement list = driver.findElement(By.id("cn1108cn20cn30"));
         list.click();
 
-        var we = driver.findElements(By.className("col-unitname"));
-
-        var webElement = driver.findElements(By.className("btn-study"));
+//        var webElement = driver.findElements(By.className("table-resp-col.col-unitname"));
+        var webElement = driver.findElements(By.ByCssSelector.cssSelector("col-unitname"));
+        webElement = driver.findElements(new By.ByClassName("col-study"));
         System.out.println(webElement.size());
-        webElement.get(0).click();
+        if(webElement.size() == 0){
+//            driver.quit();
+            System.exit(100);
+        }
+        System.out.println(webElement.get(0).getText());
 
 
-//        WebElement study = driver.findElement(By.className("btn-study"));
-//        study.click();
-//        System.out.println(study.getTagName());
+        WebElement study = driver.findElement(By.className("btn-study"));
+        study.click();
+        System.out.println(study.getTagName());
 
         driver.get(url);
 
@@ -73,6 +77,7 @@ public class DriverRun {
         wait(driver,700);
 
         System.gc();
+
         boolean Ans = true;
         int page = 0;
         for(int i = 0 ; i < 10 ; i++){
